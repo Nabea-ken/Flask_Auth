@@ -12,12 +12,72 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Intialize SQLAlchemy
 db = SQLAlchemy(app)
 
+# Database Model - Single row in my db
+class User(db.Model):
+    # Class Variables
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(25), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+
 # Routes
 @app.route('/')
 def home():
     if "username" in session:
         return redirect(url_for('dashboard'))
     return render_template("index.html")
+
+
+# Login
+@app.route("/Login", methods=["POST"])
+def login():
+    if request.method == "POST":
+        # Collect info from the form
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template("index.html")
+    
+
+
+
+# Register
+@app.route("/Register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        user = User.query.filter_by(username=username).first()
+        if user:
+            return render_template("index.html", error="User already exists!")
+        else:
+            new_user = User(username=username)
+            new_user.set_password(password)
+            # Add to the database
+            db.session.add(new_user)
+            db.session.commit()
+            # Log the user in - Create a new session for new user
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+
+
+
+# Dashboard
+
+
+# Logout
 
 
 
