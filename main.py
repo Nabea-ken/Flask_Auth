@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -11,6 +12,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Intialize SQLAlchemy
 db = SQLAlchemy(app)
+
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 # Database Model - Single row in my db
 class User(db.Model):
@@ -46,7 +50,7 @@ def login():
             session['username'] = username
             return redirect(url_for('dashboard'))
         else:
-            return render_template("index.html")
+            return render_template("index.html", error="User doesn't exist Register!")
     
 
 
@@ -88,7 +92,7 @@ def logout():
 
 
 
-if __name__ in "__main__":
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
