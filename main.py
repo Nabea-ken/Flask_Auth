@@ -17,7 +17,7 @@ class User(db.Model):
     # Class Variables
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
+    password_hash = db.Column(db.String(150), nullable=False)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -37,7 +37,6 @@ def home():
 # Login
 @app.route("/Login", methods=["POST"])
 def login():
-    if request.method == "POST":
         # Collect info from the form
         username = request.form['username']
         password = request.form['password']
@@ -53,9 +52,8 @@ def login():
 
 
 # Register
-@app.route("/Register", methods=["GET", "POST"])
+@app.route("/Register", methods=["POST"])
 def register():
-    if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
 
@@ -75,12 +73,18 @@ def register():
 
 
 # Dashboard
-
+@app.route("/dashboard")
+def dashboard():
+    if "username" in session:
+        return render_template("dashboard.html", username=session['username'])
+    else:
+        return redirect(url_for('home'))
 
 # Logout
-
-
-
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    return redirect(url_for('home'))
 
 
 
